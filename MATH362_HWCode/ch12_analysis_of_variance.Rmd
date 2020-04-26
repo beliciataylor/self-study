@@ -1,0 +1,21 @@
+---
+title: "CH12 Analysis of Variance"
+author: "Belicia Rodriguez"
+date: "4/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 12.3 Multiple Comparisons: Turkey's Method
+
+## Exercise 12.3.1
+
+```{r Case Study 12.2.1 Information}
+# input dataset from case study
+
+
+```
+
