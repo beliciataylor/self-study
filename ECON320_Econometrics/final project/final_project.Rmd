@@ -30,17 +30,15 @@ data(bwght2, package='wooldridge')
 
 # Introduction and Motivation
 
-<img src="prenatal_visit_pic.jpg" style="max-width:25%;min-width:40px;float:right;" alt="" />
+<img src="img/prenatal_visit_pic.jpg" style="max-width:25%;min-width:40px;float:right;" alt="" />
 
 In 2017, around 3.86 million births were registered in the United States, which was a 2% decrease in number of births in the previous year. There are an array of variables that affect the birth of each child, and the variables being analyzed in this study fall into one of two categories: descriptive and behavioral. The descriptive category are variables that characterize the mother, father, and baby; examples for the parents would be age, years of education, and race. For the baby, examples would be their apgar score and their birth weight. The behavioral category includes variables pertaining to the mother's habits during her pregnancy; examples include attending prenatal care visits, smoking, and drinking alcoholic beverages.
 
-<img src="pregnancy_smoking.jpg" style="max-width:25%;min-width:40px;float:right;" alt="" />
+<img src="img/pregnancy_smoking.jpg" style="max-width:25%;min-width:40px;float:right;" alt="" />
 
 A study done in 2017 showed that birth rates for women between the ages of 15-39 decreased around 2-4% (1). For non-Hispanic white women and Hispanic women, the birth rate decreased by 2-3%, whereas for non-Hispanic black women the birth rate went up a little less than 1% (1). There was an increase in the percentage of women who were getting prenatal care (77.3%), and the percentage of women who smoked decreased to 6.9% (1). With this background knowledge and using the Wooldridge dataset on birth weight (bwght2), I will investigate whether pregnancy habits such as prenatal care vists and smoking positively or negatively affects a child's birth weight, and I will also investigate whether characteristics such as age, years of education, and race positively or negatively affects a child's birth weight. 
 
-<img src="pregnancy women ages.png" style="float:center;" alt=""/>
-
-<img src="smoked_during_pregnancy.png" style="float:center;" alt="" />
+<img src="img/smoked_during_pregnancy.png" style="float:center;" alt="" />
 
 *Images used from (2) Smoking during Pregnancy, (1) Birth Final Data, 2018*
 
