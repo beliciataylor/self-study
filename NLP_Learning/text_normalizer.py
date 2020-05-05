@@ -20,9 +20,12 @@ nlp = en_core_web_sm.load(parse=True, tag=True, entity=True)
 # html_stripping: remove unnecessary tags
 def strip_html_tags(text):
     soup = BeautifulSoup(text, 'html.parser')
-    [s.extract() for s in soup(['iframe', 'script'])]
-    stripped_text = soup.get_text()
-    stripped_text = re.sub(r'[\r|\n|\r\n]+', '\n', stripped_text)
+    if bool(soup.find()):
+        [s.extract() for s in soup(['iframe', 'script'])]
+        stripped_text = soup.get_text()
+        stripped_text = re.sub(r'[\r|\n|\r\n]+', '\n', stripped_text)
+    else:
+        stripped_text = text
     return stripped_text
 
 # accented_char_removal
