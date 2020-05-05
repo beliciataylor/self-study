@@ -72,7 +72,7 @@ if __name__ =='__main__':
 
     # input data and model directories
     parser.add_argument('--model_dir', type=str)
-    parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAIN'))
+    parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAINING'))
 
     # Train the model
     for epoch in range(1,6):
