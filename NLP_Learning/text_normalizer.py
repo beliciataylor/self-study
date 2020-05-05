@@ -84,17 +84,14 @@ def normalize_corpus(corpus, html_stripping=True, contraction_expansion=True, ac
         # strip HTML
         if html_stripping:
             doc = strip_html_tags(doc)
+        # remove extra newlines
+        doc = re.sub(r'[\r|\n|\r\n]+', ' ', doc)
         # remove accented characters
         if accented_char_removal:
             doc = remove_accented_chars(doc)
         # expand contractions
         if contraction_expansion:
             doc = expand_contractions(doc)
-        # lowercase the text
-        if text_lower_case:
-            doc = doc.lower()
-        # remove extra newlines
-        doc = re.sub(r'[\r|\n|\r\n]+', ' ', doc)
         # lemmatize text
         if text_lemmatization:
             doc = lemmatize_text(doc)
@@ -106,10 +103,16 @@ def normalize_corpus(corpus, html_stripping=True, contraction_expansion=True, ac
             doc = remove_special_characters(doc, remove_digits=remove_digits)
         # remove extra whitespace
         doc = re.sub(' +', ' ', doc)
+        # lowercase the text
+        if text_lower_case:
+            doc = doc.lower()
         # remove stopwords
         if stopword_removal:
-            doc = remove_stopwords(doc, is_lower_case=text_lower_case)
-        
+            doc = remove_stopwords(doc, is_lower_case=text_lower_case, stopwords=stopwords)
+        # remove extra whitespace
+        doc = re.sub(' +', ' ', doc)
+        doc = doc.strip()
+
         normalized_corpus.append(doc)
 
     return normalized_corpus
