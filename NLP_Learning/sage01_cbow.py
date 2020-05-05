@@ -10,34 +10,6 @@ import keras.backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Embedding, Lambda
 
-# for data
-from nltk.corpus import gutenberg
-from string import punctuation
-import text_normalizer as tn
-
-# import data
-bible = gutenberg.sents('bible-kjv.txt')
-remove_terms = punctuation + '0123456789'
-
-norm_bible = [[word.lower() for word in sent if word not in remove_terms] for sent in bible]
-norm_bible = [' '.join(tok_sent) for tok_sent in norm_bible]
-norm_bible = filter(None, tn.normalize_corpus(norm_bible))
-norm_bible = [tok_sent for tok_sent in norm_bible if len(tok_sent.split()) > 2]
-
-# build the corpus vocabulary
-tokenizer = text.Tokenizer()
-tokenizer.fit_on_texts(norm_bible)
-word2id = tokenizer.word_index
-
-# build vocabulary of unique words
-word2id['PAD'] = 0
-id2word = {v:k for k, v in word2id.items()}
-wids = [[word2id[w] for w in text.text_to_word_sequence(doc)] for doc in norm_bible]
-
-vocab_size = len(word2id)
-embed_size = 100
-window_size = 2 # context window size
-
 # build a CBOW (context, target) generator
 def generate_context_word_pairs(corpus, window_size, vocab_size):
     context_length = window_size*2
@@ -83,6 +55,3 @@ if __name__ =='__main__':
             loss += cbow.train_on_batch(x, y)
             if i % 1000000 == 0:
                 print('Processed {} (context, word) pairs'.format(i))
-    
-        print('Epoch:', epoch, '\tLoss:', loss)
-        print()
