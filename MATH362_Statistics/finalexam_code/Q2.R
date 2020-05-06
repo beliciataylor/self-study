@@ -4,7 +4,7 @@ library(tidyverse)
 library(pracma)
 
 # read csv file
-table <- read.csv('Q2_5.csv')
+table <- read.csv('data/Q2_5.csv')
 
 # get type of object
 typeof(table)
