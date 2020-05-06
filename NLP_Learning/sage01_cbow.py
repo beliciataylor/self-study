@@ -3,9 +3,8 @@ import os
 import argparse
 
 # for training model
-from keras.preprocessing import text
+from keras.preprocessing import text, sequence
 from keras.utils import np_utils
-from keras.preprocessing import sequence
 import keras.backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Embedding, Lambda
@@ -31,12 +30,31 @@ def generate_context_word_pairs(corpus, window_size, vocab_size):
             y = np_utils.to_categorical(label_word, vocab_size)
             yield(x,y)
 
-# build CBOW architecture
-cbow = Sequential()
-cbow.add(Embedding(input_dim=vocab_size, output_dim=embed_size, input_length=window_size*2))
-cbow.add(Lambda(lambda x: K.mean(x, axis=1), output_shape=(embed_size, )))
-cbow.add(Dense(vocab_size, activation='softmax'))
-cbow.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+def model(df):
+    # change df back to list
+    name = df.columns[0]
+    norm_corpus = df[names].to_list()
+    
+    # build the corpus vocabulary
+    tokenizer = text.Tokenizer()
+    tokenizer.fit_on_texts(norm_corpus)
+    word2id = tokenizer.word_index
+
+    # build vocabulary of unique words
+    word2id['PAD'] = 0
+    id2word = {v:k for k, v in word2id.items()}
+    wids = [[word2id[w] for w in text.text_to_word_sequence(doc)] for doc in norm_corpus]
+
+    vocab_size = len(word2id)
+    embed_size = 100
+    window_size = 2 # context window size
+    
+    # build CBOW architecture
+    cbow = Sequential()
+    cbow.add(Embedding(input_dim=vocab_size, output_dim=embed_size, input_length=window_size*2))
+    cbow.add(Lambda(lambda x: K.mean(x, axis=1), output_shape=(embed_size, )))
+    cbow.add(Dense(vocab_size, activation='softmax'))
+    cbow.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
 
 if __name__ =='__main__':
