@@ -55,21 +55,28 @@ def model(df):
     cbow.add(Lambda(lambda x: K.mean(x, axis=1), output_shape=(embed_size, )))
     cbow.add(Dense(vocab_size, activation='softmax'))
     cbow.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    
+    # Train the model
+    for epoch in range(1,6):
+        for x, y in generate_context_word_pairs(corpus=wids, window_size=window_size, vocab_size=vocab_size):
+            cbow.train_on_batch(x, y)
+    
+    return(cbow)
 
 
 if __name__ =='__main__':
     parser = argparse.ArgumentParser()
+    args, unknown = _parse_args()
 
     # input data and model directories
     parser.add_argument('--model_dir', type=str)
     parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAINING'))
-
-    # Train the model
-    for epoch in range(1,6):
-        loss = 0
-        i = 0
-        for x, y in generate_context_word_pairs(corpus=wids, window_size=window_size, vocab_size=vocab_size):
-            i += 1
-            loss += cbow.train_on_batch(x, y)
-            if i % 1000000 == 0:
-                print('Processed {} (context, word) pairs'.format(i))
+    
+    # load data
+    df = pd.read_csv(os.path.join(args.train, 'norm_bible.csv'))
+    
+    # run model
+    trained_model = model(df)
+    
+    # save model output
+    trained_model.save(os.path.join(args.sm_model_dir, '01'), 'model.h5')
