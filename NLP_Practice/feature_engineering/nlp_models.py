@@ -125,11 +125,12 @@ def lda(norm_corpus, n_components=3, max_iter=10000, random_state=0,
 
 # Robust Word2Vec models with Gensim
 from gensim.models import word2vec
+import nltk
 
 def trainword2vec(norm_corpus, feature_size=100, window_context=30, min_word_count=1, sample=1e-3, iterations=50):
     # tokenize sentences in corpus
     wpt = nltk.WordPunctTokenizer()
-    tokenized_corpus = [wpt.tokenize(document) for document in norm_bible]
+    tokenized_corpus = [wpt.tokenize(document) for document in norm_corpus]
     # train model
     w2v_model = word2vec.Word2Vec(tokenized_corpus, size=feature_size, window=window_context, 
                                     min_count=min_word_count, sample=sample, iter=iterations)
@@ -137,6 +138,6 @@ def trainword2vec(norm_corpus, feature_size=100, window_context=30, min_word_cou
 
 def viewsimilarwords(model, search_term_list):
     similar_words = {search_term: [item[0]
-                        for item in w2v_model.wv.most_similar([search_term], topn=5)],
+                        for item in model.wv.most_similar([search_term], topn=5)]
                         for search_term in search_term_list}
     return similar_words
