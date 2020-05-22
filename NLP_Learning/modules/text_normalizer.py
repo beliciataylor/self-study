@@ -1,7 +1,7 @@
 import nltk
 import spacy
 import unicodedata
-from contractions import CONTRACTION_MAP
+from modules.contractions import CONTRACTION_MAP
 import re
 from nltk.corpus import wordnet
 from nltk.stem.porter import PorterStemmer
