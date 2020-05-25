@@ -1,7 +1,7 @@
 ---
-title: "Assignment Econ 320 Inference Exercises"
+title: "Inference"
 author: "Belicia Rodriguez"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: 2019-11-25
 output: html_document
 ---
 ```{r setup, include=FALSE}
@@ -17,20 +17,22 @@ library(texreg)
 data(htv, package = 'wooldridge')
 ```
 
-## Wooldridge C4.11 (Modified) 
+# Note on Post:
 
-Use the data in HTV to answer this question. 
+This post is assignment 5 from my undergraduate econometrics course.
+
+# htv Dataset
 
 1. Estimate the regression model
 
 $$ educ = \beta_0 + \beta_1 *motheduc + \beta_2 *fatheduc + \beta_3 *abil + \beta_4 *abil^2 + u$$
 by OLS take a look at the results in the usual form but report the results using stargazer. 
 
-2.a Test the null hypothesis that educ is linearly related to abil against the alternative that the relationship is quadratic. Show the tstat and the pvalue associated with that test. Do you reject the null hypothesis? what does that mean? EXPLAIN
+2. Test the null hypothesis that educ is linearly related to abil against the alternative that the relationship is quadratic. Show the tstat and the pvalue associated with that test. Do you reject the null hypothesis? what does that mean? EXPLAIN
 
 Since the t-value is greater than the p-value, you can reject the null hypothesis. Rejecting the null hypothesis means that the coefficient does not equal 0, and therefore has a relationship with the dependent variable and is relevant to the model. The p-value is the smallest critical value that will reject the null hypothesis for a particular coefficient. If the t-value is greater than the p-value, then the null hypothesis can be rejected. In this case, because p-value is zero and t-value is 6.0934, then you can reject the null hypothesis.
 
-2.b Test the null hypothesis that the effect of mothereduc is bigger 0.3. 
+3. Test the null hypothesis that the effect of mothereduc is bigger 0.3. 
 
 ```{r, message=FALSE,  results='asis'}
 # to include the term ability squared you can create a separate variable or even aesier use the I(function) in the lm command to add the term
@@ -75,22 +77,20 @@ print(paste("pvalue =", round(pt(abs(tstat), df),6)))
 
 ```
 
-<br>
+4. Using the equation in part (2), test $H_0: \beta_1=\beta_2$ against a two-sided alternative. What is the p-value of the test? 
 
-3.  Using the equation in part (2), test $H_0: \beta_1=\beta_2$ against a two-sided alternative. What is the p-value of the test? 
+This requires creating a new regression with a $\theta_1=\beta_1-\beta_2$ and then test for $H_0: \theta_1=0$
 
-Remember this requires for creating a new regression with a $\theta_1=\beta_1-\beta_2$ as shown in your book and then test for $H_0: \theta_1=0$
+Change the regression to create $\theta_1=\beta_1-\beta_2$ 
 
-Let's change the regression to create $\theta_1=\beta_1-\beta_2$ 
-
-Add and subtract $\beta_2 motheduc$ and create a variable $parentedu=motheduc+fatheduc$ see below: 
+Add and subtract $\beta_2 motheduc$ and create a variable $parentedu=motheduc+fatheduc$:
 
 $$ educ = \beta_0 + \beta_1 motheduc - \beta_2 motheduc + \beta_2 motheduc+ \beta_2 fatheduc + \beta_3 abil + \beta_4 abil^2 + u$$
 
 $$ educ = \beta_0 + (\beta_1 - \beta_2)   motheduc + \beta_2  (motheduc+fatheduc) + \beta_3 abil + \beta_4 abil^2 + u$$
 $$ educ = \beta_0 + \theta_1   motheduc + \beta_2  (parentedu) + \beta_3 abil + \beta_4 abil^2 + u$$
 
-By testing the null hypothesis that $H_0:\theta_1=0$ with $alpha=0.05$ we are testing $H_0: \beta_1=\beta_2$ So we just run the regression that has $\theta_1$ as a regressor and look at the t-test for $\theta_1$
+By testing the null hypothesis that $H_0:\theta_1=0$ with $alpha=0.05$ we are testing $H_0: \beta_1=\beta_2$. Run the regression that has $\theta_1$ as a regressor and look at the t-test for $\theta_1$
 
 ```{r, results='hold'}
 #critival Values for alpha=5% and 1% for 1225 degrees of freedom 
@@ -111,13 +111,11 @@ theta1reg <- lm(educ ~ motheduc + parenteduc + abil + I(abil^2), data=htv)
 stargazer(theta1reg, type = "html")
 ```
 
-***
-**Use in-line code and your interpretation for this paragraph** the value of $\theta_1$ is equal to `r round(summary(theta1reg)$coefficients["motheduc","Estimate"],3) ` with a t-stat of `r round(as.numeric(tstat <- (as.numeric(coef(theta1reg)["motheduc"])) / summary(theta1reg)$coefficients[2,2]),4) ` and a p-value of `r round(summary(theta1reg)$coefficients["motheduc","Pr(>|t|)"],4) ` this means that we fail to reject the null hypothesis that  $H_0:\theta_1=0$ at the 1% and 5% significance level which means that $\beta_1$ = $\beta_2$ therefore the level of education of mother's and father's education has the same magnitute.
- 
-***
-<br>
+The value of $\theta_1$ is equal to `r round(summary(theta1reg)$coefficients["motheduc","Estimate"],3) ` with a t-stat of `r round(as.numeric(tstat <- (as.numeric(coef(theta1reg)["motheduc"])) / summary(theta1reg)$coefficients[2,2]),4) ` and a p-value of `r round(summary(theta1reg)$coefficients["motheduc","Pr(>|t|)"],4) ` this means that we fail to reject the null hypothesis that  $H_0:\theta_1=0$ at the 1% and 5% significance level which means that $\beta_1$ = $\beta_2$ therefore the level of education of mother's and father's education has the same magnitute.
 
-4. 	Add the two college tuition variables to the regression from part (2) and determine whether they are jointly statistically significant. 
+
+5. Add the two college tuition variables to the regression from part (2) and determine whether they are jointly statistically significant. 
+
 First do the F-test step-by-step
 
 ```{r Ftest, results='hold'}
@@ -144,21 +142,18 @@ print(paste("F-stat=", F))
 # p value = 1-cdf of the appropriate F distribution:
 print(paste("p-value=", round(1-pf(F, 2, unrestricted$df),3)))
 ```
-<br>
-***
-Then use any of the other methods
- <br>
+
+Then use any of the other methods.
+
 ```{r}
 # F test 
 linearHypothesis(unrestricted, c("tuit17", "tuit18"))
 
 ```
 
-<br> 
-This shows that in this case we **do not reject the null hypothesis**, that the coefficients are jointly zero. 
+This shows that in this case we **do not reject the null hypothesis** that the coefficients are jointly zero. 
 
-***
-5.  Use function `confint()` to find the confidence intervals of all the parameters in the unsrestricted model from (4) What do you conclude? EXPLAIN this results in the light of the significance of your coefficients
+6. Use function `confint()` to find the confidence intervals of all the parameters in the unsrestricted model from (4) What do you conclude? EXPLAIN this results in the light of the significance of your coefficients
 
 ```{r}
 confint(unrestricted)
@@ -167,7 +162,7 @@ confint(unrestricted)
 The confidence interval for tuit17 and tuit18 includes zero, whereas the other intervals do not. Therefore, the confidence interval supports the F test conclusion that the coefficients for tuit17 and tuit18 are jointly zero.
 
 
-6. Using the Breush-Pagan test, test for heteroskedasticity in your model  
+7. Using the Breush-Pagan test, test for heteroskedasticity in your model  
 $$ educ = \beta_0 + \beta_1 *motheduc + \beta_2 *fatheduc + \beta_3 *abil + \beta_4 *abil^2 + u$$ 
 then estimate the model with robust standard errors (correcting for the heteroskedasticy problem), and the present both ( OLS and robust) the results in a table using `screenreg()`. 
 
@@ -180,25 +175,4 @@ bptest(model)
 model_hccm <- lm_robust(educ ~ motheduc + fatheduc + abil + I(abil^2), data = htv) %>% extract.lm_robust(include.ci = FALSE)
 screenreg(list(model, model_hccm), digits = 3)
 ```
-
-
-***
-<style>
-div.gray { background-color:#dbdbdb; border-radius: 5px; padding: 20px;}
-</style>
-<div class = "gray">
-
-**Packages used in this document**
-
-
-
-</div>
-<br>
-<br>
-
-
-
-
-
-
 
