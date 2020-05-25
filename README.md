@@ -5,9 +5,19 @@ This repository contains code that I've used to develope my coding skills and be
 
 ## Tensorflow in Practice: from [Coursera Specialization](https://www.coursera.org/specializations/tensorflow-in-practice?)
 
+This folder contains the lesson and exercise notebooks from the [specialization's repository](https://github.com/lmoroney/dlaicourse).
+
+The specialization included the following courses:
+  1. Introduction to TensorFlow for Artificial Intelligence, Machine Learning, and Deep Learning
+  2. Convolutional Neural Networks in TensorFlow
+  3. Natural Language Processing in TensorFlow
+  4. Sequences, Time Series and Prediction
 
 ## NLP Learning: from [_Text Analytics with Python_](https://www.amazon.com/Text-Analytics-Python-Practitioners-Processing/dp/1484243536/ref=pd_lpo_14_t_0/144-1875545-9407862?_encoding=UTF8&pd_rd_i=1484243536&pd_rd_r=5e3ae205-4e46-4b1f-8323-c374ffbb7d93&pd_rd_w=I0iqB&pd_rd_wg=Cwn0e&pf_rd_p=7b36d496-f366-4631-94d3-61b87b52511b&pf_rd_r=Z454NVVRHP48CPMZACE5&psc=1&refRID=Z454NVVRHP48CPMZACE5)
+
+This folder contains my typed-up chapter notes and codes from the _Text Analytics with Python: A Practitioner's Guide to Natural Language Processing_. Each chapter has a folder that contains jupyter notebooks of the entire chapter and also jupyter notebooks of each section of the chapter with my notes. I created the sections when I was reviewing the chapter notebook a second time. Each folder also contains the data used in each chapter and also saved models that were trained in order to avoid having to retrain the models each time I run the notebook. The folder handmade also contains modules needed in the chapters or modules that I made to make loading data between section notebooks easier.
 
 
 ## ECON 485: Empirical Methods and Machine Learning
 
+This course was a continuation of an undergraduate econometrics course that further explored the multiple linear regression model and covered model selection techniques. Topics included resampling methods, selection criteria, subset selection, shrinkage methods, classification methods, and unsupervised learning. The folder contains my lecture notes.
