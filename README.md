@@ -11,6 +11,3 @@ This repository contains code that I've used to develope my coding skills and be
 
 ## ECON 485: Empirical Methods and Machine Learning
 
-
-## ECON320: Econometrics
-
