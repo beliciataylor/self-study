@@ -1,0 +1,816 @@
+---
+title: "Unicef Water"
+author: "Belicia Rodriguez"
+date: "5/10/2019"
+output:
+  html_document:
+    code_folding: hide
+    df_print: paged
+    theme: readable
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r Setup and Packages, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+library(readxl)
+library(tidyverse)
+library(forcats)
+
+library(qwraps2)
+library(rlang) # for .data part of obj
+library(kableExtra)
+options(qwraps2_markup = "markdown")
+# took out plyr b/c interferring with dplyr package
+```
+
+# Introduction
+
+UNICEF collects data on the accessibility and conditions of drinking water, sanitation, and hygiene (WASH) around the world. The organization divides the evaluation for each criteria into different hierarchial evaluations.
+
+Drinking Water
+
+1. *Safely managed drinking water service*: Water from an improved source that is located on premises, available when needed and free from contamination.
+
+2. *Basic drinking water service*: An improved water source within 30 minutes roundtrip
+
+3. *Limited drinking water service*: An improved water source that takes over 30 minutes roundtrip to access
+
+4. *Unimproved water sources*: Water source without improvement
+
+5. *Surface water*: Water taken directly from lakes, rivers, etc
+
+Sanitation
+
+1. *Safely managed sanitation service*: Improved sanitation facilities not shared with other households with excreta safely disposed in situ or removed and treated offsite
+
+2. *Basic sanitation service*: Improved sanitation facilites not shared with other households
+
+3. *Limited sanitation service*: Improved facilities shared with other households
+
+4. *Unimproved sanitation service*: Sanitation without improvement
+
+5. *Open defecation*: Go out in fields, bushes, forests, open bodies of water, etc
+(Proportion of population using improved sanitation facilities (excluding shared))
+
+Hygiene
+
+1. *Basic*: Handwashing facilities with soap or water
+
+2. *Limited*: Handwashing facilities without water or soap
+
+3. *No facility*: No facilities for handwashing
+
+This investigation specifically outlines the WASH accessibility and conditions of 232 countries in 2000 and 2015. In this analysis, I will be investigating which countries have low drinking water, sanitation, and/or hygiene and showing whether there has been improvement between 2000 to 2015.
+
+I will be using the excel sheet UNICEF uploaded on [their WASH overview post](https://data.unicef.org/topic/water-and-sanitation/drinking-water/#status) in July 2017 to do an analysis on the progession of countries towards improving WASH conditions.
+
+I analyze each evaluation through three country levels: national, urban, and rural.
+
+1. *National*: encompasses the urban, suburban, and rural levels
+
+2. *Urban*: refers to cities in the region and suburban areas
+
+3. *Rural*: everything outside of urban areas
+
+
+# Code Explanation
+
+Although the investigation portion of this report will not include code, this section will breakdown the steps taken to import, clean, and tidy the data and show glimpses of code. This section will not analyze any of the data, but I decided to include this section in order to explain how the data was prepared for analysis. I've allowed for the code to be accessible through a "code" button on the side, but I will explain what each section will discuss.
+
+1. Downloading Data from Website
+
+Explain why download.file() was used to download data from UNICEF's website, and I also breakdown what components of read_excel() were used to set up the data.
+
+2. Tidying Data
+
+Mainly used select(), separate(), gather(), drop_na(), mutate_at() with as.factor(), and mutate() with str_remove() to tidy the four dataframes created from the UNICEF's excel files. I also use the drinking water and sanitation dataframes to create two dataframes containing rates on improved sanitation facilities dataframe and improved water supply. 
+
+3. Functions
+
+I created six functions for this report: add_UN_region(), water_supply_graph(), ldc_graph(), unicef_summary_table(), unicef_two_tables(), and retrieve_data(). In general, these functions either added more classifications for the UNICEF dataframes or generated similar-looking graphs and tables to decrease the amount of copying and pasting in the code. retrieve_data() was primarily used to reduce the amount of code written in the r embedded code that I use in the text parts of the reports.
+
+
+## Downloading Data from Website
+
+- download.file()
+
+Reproductibility is an important component of creating an R Markdown report; if I shared my R Markdown document with another person who is using a different computer than mine, I want that person to be able to reproduce my document without difficulty. That is why I used download.file() to import the UNICEF excel file; on UNICEF's website, the excel file has its own [website link](https://data.unicef.org/wp-content/uploads/2015/12/Drinking-Water-Sanitation-Hygiene-Database-July-2017.xlsx). I used the link as the main argument in download.files, which then saved the file to my computer in the same folder where my R markdown document is saved; another argument of download.files() allowed me to save the file as "unicef_water.xlsx".
+
+- read_excel()
+
+The UNICEF's excel file contained four sheets; therefore, I used read_excel four times, each time assigning a different sheet to a different R object. I used the col_names argument to rewrite the column names. I suspect there's a way to use regex to fix the columns instead of rewriting the more than 15 column names, but I haven't mastered regex enough to comfortably use them here. I'm also not sure if I can use regex in read_excel, but I will investigate more on regex at a later time. I also used the na argument to replace "-", which signified an empty cell, to NA.
+
+```{r Download Data from Website}
+# Downlown unicef web file to computer
+download.file("https://data.unicef.org/wp-content/uploads/2015/12/Drinking-Water-Sanitation-Hygiene-Database-July-2017.xlsx", "unicef_water.xlsx")
+
+# Create drinking_water dataframe
+drinking_water <- read_excel("unicef_water.xlsx", sheet = 1, col_names = c("iso_code", "countries", "year", "national/at_least_basic", "national/limited", "national/unimproved", "national/surface_water", "national/annual_basic_change_rate", "rural/at_least_basic", "rural/limited", "rural/unimproved", "rural/surface_water", "rural/annual_basic_change_rate", "urban/at_least_basic", "urban/limited", "urban/unimproved",  "urban/surface_water", "urban/annual_basic_change_rate", "DELETE", "national/iws_safely_managed", "national/iws_accessible_premise", "national/iws_available_needed", "national/iws_free_from_contamination", "national/iws_piped", "national/iws_non_piped", "rural/iws_safely_managed", "rural/iws_accessible_premise", "rural/iws_available_needed", "rural/iws_free_from_contamination", "rural/iws_piped", "rural/iws_non_piped", "urban/iws_safely_managed", "urban/iws_accessible_premise", "urban/iws_available_needed", "urban/iws_free_from_contamination", "urban/iws_piped", "urban/iws_non_piped"), na = "-", skip = 7, n_max = 464)
+
+# Delete empty column in drinking_water
+drinking_water <- subset(drinking_water, select = -DELETE)
+
+# Create sanitation dataframe
+sanitation <- read_excel("~/Downloads/Drinking-Water-Sanitation-Hygiene-Database-July-2017.xlsx", sheet = 2, col_names = c("iso_code", "countries", "year", "national/at_least_basic", "national/limited_shared", "national/unimproved", "national/open_defecation",  "national/annual_rate_change_basic", "national/annual_rate_change_open_defecation", "rural/at_least_basic", "rural/limited_shared", "rural/unimproved", "rural/open_defecation", "rural/annual_rate_change_basic", "rural/annual_rate_change_open_defecation", "urban/at_least_basic", "urban/limited_shared", "urban/unimproved", "urban/open_defecation", "urban/annual_rate_change_basic", "urban/annual_rate_change_open_defecation", "DELETE", "national/isf_safely_managed", "national/isf_disposed_situ", "national/isf_emptied_treated", "national/isf_wastewater_treated", "national/isf_latrines_and_other", "national/isf_septic_tanks", "national/isf_sewer_connections",   "rural/isf_safely_managed", "rural/isf_disposed_situ", "rural/isf_emptied_treated", "rural/isf_wastewater_treated", "rural/isf_latrines_and_other", "rural/isf_septic_tanks", "rural/isf_sewer_connections", "urban/isf_safely_managed", "urban/isf_disposed_situ", "urban/isf_emptied_and_treated", "urban/isf_wastewater_treated", "urban/isf_latrines_and_other", "urban/isf_septic_tanks", "urban/isf_sewer_connections"), na = "-", skip = 8, n_max = 464)
+
+# Delete empty column in sanitation
+sanitation <- subset(sanitation, select = -DELETE)
+
+# Create hygiene dataframe
+hygiene <- read_excel("~/Downloads/Drinking-Water-Sanitation-Hygiene-Database-July-2017.xlsx", sheet = 3, col_names = c("iso_code", "countries", "year", "national/basic", "national/limited", "national/no_facility", "rural/basic", "rural/limited", "rural/no_facility", "urban/basic", "urban/limited", "urban/no_facility"), na = "-", skip = 7, n_max = 71)
+```
+
+*After using download.file() and read_excel(), the dataframes were formatted this way.*
+
+```{r Developing Dataframe 1, echo=FALSE}
+drinking_water
+```
+
+## Tidying Data
+
+Tidying these dataframes created the biggest chunk of code in my report; however, the process was usually a variation of a repetition of several core steps. I will explain the core steps here.
+
+*Drinking Water, Sanitation, Hygiene, Improved*
+
+- Separating dataframes
+
+Both the drinking water and sanitation dataframes have data on the improvement of both facility categories, and I decided it was best to create new dataframes that focused solely on improvement. For drinking water, I created an improved_water_supply object and assigned variables that only contained "iws" and the other important variables (percentage, countries, iso_code, year). I then deleted the "iws" variables from the drinking_water dataframe. The same process was done for the sanitation/improved_sanitation_facilities dataframes.
+
+- Gather & separate columns
+
+An important component of tidying data is that every row has to represent an observation and columns have to be variable names (not values). Therefore, I decided to gather "national/at_least_basic" to "urban/annual_basic_change_rate" columns and create two new columns: evaluation, containing the old column names, and percentage, containing all the percentages that were underneath the columns.
+
+After gathering, I separated the evaluation columns, which has the "national/at_least_basic" to "urban/annual_basic_change_rate" names in them, by the "/" in each of the names. The separation created two columns: country_level (national, rural, urban) and water_supply (at_least_basic, limited, etc). 
+
+- Remove rows with NAs
+
+Now that each row is an observation, I can remove the rows that have no observation, or simply NA in their percentage column. This is done by using the drop_na() function.
+
+- Creating categorical variables
+
+There are three categorical variables in each dataframe: country_level (national, urban, rural), level/improvement (at least basic, limited, etc), and year (2000, 2015). I made them categorical variables in order to make it easier to investigate the data in later graphs and tables.
+
+- Round percentage variable
+
+The percentage columns had more than 8-10 digits in each column, so I decided to set the cap at the number of digits to 6 in order to read the numbers with more ease.
+
+- Snip
+
+Specifically for the improved_water_supply and improved_sanitation_facilities, the improvement values all had either "iws" or "isf" in the name. These letters were no longer necessary; therefore, I snipped them from the values using mutate() and str_remove().
+
+```{r Tidying Drinking Water Hygiene etc}
+## Separate Dataframes
+# Drinking Water -> Drinking Water and Improved Water Supply
+improved_water_supply <- drinking_water %>% select(iso_code, countries, year, contains("iws"))
+drinking_water <- drinking_water %>% select(-contains("iws"))
+
+# Sanitation -> Sanitation and Improved Sanitation Facilities
+improved_sanitation_facilities <- sanitation %>% select(iso_code, countries, year, contains("isf"))
+sanitation <- sanitation %>% select(-contains("isf") )
+
+## Drinking Water Dataframe
+# Gather columns
+drinking_water <- gather(drinking_water, evaluation, percentage, "national/at_least_basic":"urban/annual_basic_change_rate")
+
+# Separate evaluation column
+drinking_water <- separate(drinking_water, evaluation, c("country_level", "water_supply"), sep = "/")
+
+# Remove rows with NAs
+drinking_water <- drop_na(drinking_water)
+
+# change country_level, water_supply, and year into categorical variables 
+drinking_water <- drinking_water %>% mutate_at(c("country_level","water_supply","year"), as.factor)
+
+# Round percentage variable to six digits
+drinking_water <- drinking_water %>% mutate(percentage = round(drinking_water$percentage, digits = 6))
+
+## Improved Water Supply Dataframe
+# Gather columns
+improved_water_supply <- gather(improved_water_supply, evaluation, percentage, "national/iws_safely_managed":"urban/iws_non_piped")
+
+# Separate evaluation column 
+improved_water_supply <- separate(improved_water_supply, evaluation, c("country_level", "water_improvement"), sep = "/")
+
+# Remove rows with NAs
+improved_water_supply <- drop_na(improved_water_supply)
+
+# snip iws from water_improvement variable
+improved_water_supply <- improved_water_supply %>% mutate(water_improvement = str_remove(water_improvement, "iws_"))
+
+# change country_level, water_improvement, and years into categorical variables 
+improved_water_supply <- improved_water_supply %>% mutate_at(c("country_level", "water_improvement", "year"), as.factor)
+
+# Round percentage variable to six digits
+improved_water_supply <- improved_water_supply %>% mutate(percentage = round(improved_water_supply$percentage, digits = 6))
+
+## Hygiene Dataframe
+# Gather columns
+hygiene <- gather(hygiene, evaluation, percentage, "national/basic":"urban/no_facility")
+
+# Separate evaluation column
+hygiene <- separate(hygiene, evaluation, c("country_level", "hygiene_level"), sep = "/")
+
+# Remove rows with NAs
+hygiene <- drop_na(hygiene)
+
+# change country_level, hygiene_level, and year to categorical variables
+hygiene <- hygiene %>% mutate_at(c("country_level", "hygiene_level", "year"), as.factor)
+
+# Round percentage variable to six digits
+hygiene <- hygiene %>% mutate(percentage = round(hygiene$percentage, digits = 6))
+
+## Sanitation Dataframe
+# Gather columns
+sanitation <- gather(sanitation, evaluation, percentage, "national/at_least_basic":"urban/annual_rate_change_open_defecation")
+
+# Separate evaluation column
+sanitation <- separate(sanitation, evaluation, c("country_level", "sanitation_level"), sep = "/")
+
+# Remove rows with NAs
+sanitation <- drop_na(sanitation)
+
+# Change country_level, sanitation_level, and year to categorical variables
+sanitation <- sanitation %>% mutate_at(c("country_level", "sanitation_level", "year"), as.factor)
+
+# Round percentage variable to six digits
+sanitation <- sanitation %>% mutate(percentage = round(sanitation$percentage, digits = 6))
+
+## Improved Sanitation Facilities
+# Gather columns
+improved_sanitation_facilities <- gather(improved_sanitation_facilities, evaluation, percentage, "national/isf_safely_managed":"urban/isf_sewer_connections")
+
+# Separate evaluation columns
+improved_sanitation_facilities <- separate(improved_sanitation_facilities, evaluation, c("country_level", "sanitation_improvement"), sep = "/")
+
+# Remove rows with NAs
+improved_sanitation_facilities <- drop_na(improved_sanitation_facilities)
+
+# snip isf from sanitation_improvement column
+improved_sanitation_facilities <- improved_sanitation_facilities %>% mutate(sanitation_improvement = str_remove(sanitation_improvement, "isf_"))
+
+# Change country_level, sanitation_improvement, and year to categorical variables
+improved_sanitation_facilities <- improved_sanitation_facilities %>% mutate_at(c("country_level", "sanitation_improvement", "year"), as.factor)
+```
+
+*After tidying, the drinking water dataframe was formatted this way.* 
+
+```{r Developing Dataframe 2, echo = FALSE}
+drinking_water
+```
+
+*Rates*
+
+- Two separate dataframes
+
+1. Drinking Water
+
+By using filter() and select(), I obtained only the observations that included "annual_basic_change_rate." I also changed the variable name "water supply" to "change rates" and dropped the levels that I removed when only selecting rate values (i.e at least basic, limited, etc). I also changed the name "annual_basic_change_rate" to "drinking_water_basic" by using fct_recode().
+
+2. Sanitation
+
+Since the sanitation dataframe contained I used rbind() to combine the sanitation dataframe filtered by "annual_rate_change_open_defecation" AND the sanitation dataframe filtered by "annual_rate_change_basic". Afterwards, I used mutate() to droplevels() and change the variable name "sanitation_level" to "change rates."
+
+- Bind two dataframes & remove from global environment
+
+After creating rates1 (from drinking water) and rates2 (from sanitation), I used rbind() to combine the two dataframes into one, titled "annual_rate_change." I then removed rates1 and rates2 using rm() since I don't like my global environment cluttered with unused dataframes.
+
+- Remove duplicate rows
+
+Since the percentages were duplicated for both year 2000 and 2015, I decided to remove all the rows where year = 2000 in order to delete duplicate rows.
+
+- Remove rows in drinking water & sanitation
+
+Now that I created an "annual_rate_change" dataframe, the same data that is in drinking water and sanitation dataframes can be removed. I used subset to remove the observations from the two dataframes and used droplevels() to removed unused levels.
+
+```{r Create & Tidy Rates Dataframes}
+## Rates Dataframe: drinking water and sanitation annual rate changes for certain water/sanitation conditions
+# Create rates1: contains drinking_water rate values
+rates1 <- drinking_water %>% filter(water_supply == "annual_basic_change_rate") %>% mutate(change_rates = water_supply) %>% select(-water_supply) %>% mutate(change_rates = droplevels(change_rates))
+
+# Recode factor name for drinking_water's rate values
+rates1$change_rates <- fct_recode(rates1$change_rates, "drinking_water_basic" = "annual_basic_change_rate")
+
+# Create rates2: contains sanitation rate values
+rates2 <-rbind(sanitation %>% filter(sanitation_level == "annual_rate_change_open_defecation"), sanitation %>% filter(sanitation_level == "annual_rate_change_basic")) %>% mutate(sanitation_level = droplevels(sanitation_level)) %>% mutate(change_rates = sanitation_level) %>% select(-sanitation_level)
+
+# Recode factor names for sanitation's rate values
+rates2$change_rates <- fct_recode(rates2$change_rates, "sanitation_basic" = "annual_rate_change_basic", "sanitation_open_defecation" = "annual_rate_change_open_defecation")
+
+# Bind rates1 and rates2 into a single dataframe
+annual_rate_change <- rbind(rates1, rates2)
+
+# Remove rates1 and rates2 from global environment
+rm(rates1, rates2)
+
+# Remove duplicate rows
+annual_rate_change <- annual_rate_change %>% subset(year == 2000) %>% select(-year)
+
+# Remove rates from drinking_water & sanitation
+drinking_water <- drinking_water %>% subset(water_supply != "annual_basic_change_rate") %>% mutate(water_supply = droplevels(water_supply))
+
+sanitation <- sanitation %>% subset(sanitation_level != "annual_rate_change_basic" & sanitation_level != "annual_rate_change_open_defecation") %>% mutate(sanitation_level = droplevels(sanitation_level))
+```
+
+*After tidying, the annual rates change dataframe was formatted this way.* 
+
+```{r Developing Dataframe 3, echo = FALSE}
+annual_rate_change
+```
+
+## Functions
+
+Most of the functions I created were to reduce the amount of times I'd copy and paste codes that made graphs or tables. However, the add_UN_regions() function added two categorical variables to the datasets in order to paint a bigger picture about the information in the datasets. The retrieve_data() reduced the amount of code that would be embedded into the text under each section of this report and make it easier for me to read when typing.
+
+*add_UN_regions(df)*
+
+This functino adds two categorical variables to the dataframes.
+
+1. Regions 2. Least Developed Country:
+
+I used the region designations in the [Sustainable Development Goals](https://unstats.un.org/sdgs/indicators/regional-groups/) (SDG) that were used in the 2017 Report and Statistical annex. Several graphs on the UNICEF's WASH website had used these groupings.
+
+- **Created a vector of countries for each region**: I copied and reformatted all of the countries in each region and assigned them to their own R object.
+
+- **Created an empty regions and LDC (least developed country) column**: I used mutate() to create a regions column filled with NAs and a LDC column filled with FALSE.
+
+- **Created a list with regions**: I created a regions object that was a list where each component was a region vector with its countries, which was created previously. 
+
+- **For loop**: There are three for loops nested within themselves; one for loop goes through each region, another for loop goes through each country in each region
+
+  1. Regions for loop:
+
+  The first for loop goes through each region in the regions list created earlier.
+
+  2. Countries for loop:
+
+    The second loop goes through each country in whichever region is chosen in the previous loop. This loop also matches which rows in the dataframe has the country the loop is on. This is done by having the country (c) variable equal the dataframe country column, then using as.numeric and saving this result to the row_matches album. The row_matches object is then used in the next for loop to match the region to the correct row.
+
+  3. Rows for loop:
+
+  The third for loop goes through every row in the dataframe and adds the correct region designation to the country that is in that region. The result fills up the regions column or LDC column that was added to the dataframe earlier. 
+
+  There's an if else statement in the loop that decides whether the region would be one of the seven (sub_saharan_africa, northern_africa_western_asia, central_southern_asia, eastern_southeastern_asia, latin_america_caribbean, oceania, europe_northern_america) or LDC (least_developed_countries). This is determined by the region_id_number, which is a variable defined at the beginning of all the for loops. Plus one is added to region_id_number at the end of the first for loop in order to count which region the loop is on.
+
+  If the region_id_number equals 8, meaning the regions loop is on the least_developed_countries object, then the function begins deciding whether a row in the dataframe has a country that is on the least developed countries list. If a country is on the list, then TRUE replaces the FALSE that is already in the column.
+
+- **Make region and LDC columns categorical variables**: This is done by using mutate_at() and as.factor on the two columns.
+
+- **End of function**: After the function is created, I use the function on each individual dataframe and reassign the dataframe returned in the function to the dataframe in the global environment in order for it to be updated.
+
+```{r Adding Regions Function}
+# sustainable development goals (sdg) regional groupings
+add_UN_regions <- function(df) {
+  # vector of countries and their regions (total: 240)
+    sub_saharan_africa <- c("Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde", "Cameroon", "Central African Republic", "Chad", "Comoros", "Congo", "Côte d'Ivoire", "Democratic Republic of the Congo", "Djibouti", "Equatorial Guinea", "Eritrea", "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Kenya", "Lesotho", "Liberia", "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius", "Mayotte", "Mozambique", "Namibia", "Niger", "Nigeria", "Réunion", "Rwanda", "Sao Tome and Principe", "Senegal", "Seychelles", "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Swaziland", "Togo", "Uganda", "United Republic of Tanzania", "Zambia", "Zimbabwe") #50
+
+    northern_africa_western_asia <- c("Algeria", "Egypt", "Libya", "Morocco", "Sudan", "Tunisia", "Western Sahara", "Azerbaijan", "Armenia", "Bahrain", "Cyprus", "Georgia", "Iraq", "Israel", "Jordan", "Kuwait", "Lebanon", "State of Palestine", "Oman", "Qatar", "Saudi Arabia", "Syrian Arab Republic", "Turkey", "United Arab Emirates", "Yemen", "Saint Helena", "West Bank and Gaza Strip") #27
+
+    central_southern_asia <- c("Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan", "Uzbekistan", "Afghanistan", "Bangladesh", "Bhutan", "India", "Iran (Islamic Republic of)", "Maldives", "Nepal", "Pakistan", "Sri Lanka") #14
+
+    eastern_southeastern_asia <- c("China", "China, Hong Kong Special Administrative Region", "China, Macao Special Administrative Region", "Democratic People's Republic of Korea", "Japan", "Mongolia", "Republic of Korea", "Brunei Darussalam", "Cambodia", "Indonesia", "Lao People's Democratic Republic", "Malaysia", "Myanmar", "Philippines", "Singapore", "Thailand", "Timor-Leste", "Viet Nam") #18
+
+    latin_america_caribbean <- c("Anguilla", "Antigua and Barbuda", "Aruba", "Bahamas", "Barbados", "Bonaire, Sint Eustatius and Saba", "British Virgin Islands", "Cayman Islands", "Cuba", "Curaçao", "Dominica", "Dominican Republic", "Grenada", "Guadeloupe", "Haiti", "Jamaica", "Martinique", "Montserrat", "Puerto Rico", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Sint Maarten (Dutch part)", "Suriname", "Trinidad and Tobago", "Turks and Caicos Islands", "United States Virgin Islands", "Honduras", "Costa Rica", "El Salvador", "Guatemala", "Mexico", "Nicaragua", "Panama", "Argentina", "Belize", "Bolivia (Plurinational State of)", "Brazil", "Chile", "Colombia", "Ecuador", "French Guiana", "Falkland Islands (Malvinas)", "South Georgia & the South Sandwich Islands", "Guyana", "Paraguay", "Peru", "Uruguay", "Venezuela (Bolivarian Republic of)") #49
+
+    oceania <- c("Australia","Christmas Island", "Cocos (Keeling) Islands", "Heard Island & McDonald Islands", "Norfolk Island", "New Zealand", "Fiji", "New Caledonia", "Papua New Guinea", "Solomon Islands", "Vanuatu", "Kiribati", "Marshall Islands", "Micronesia (Federated States of)", "Nauru", "Northern Mariana Islands", "Palau", "Guam", "French Polynesia", "Wallis and Futuna Island", "Pitcairn", "Cook Islands", "Niue", "Tokelau", "Tonga", "Tuvalu", "American Samoa", "Samoa", "Wallis and Futuna Islands") #29
+
+    europe_northern_america <- c("Bermuda", "Canada", "Greenland", "United States of America", "Bulgaria", "Belarus", "Czech Republic", "Hungary", "Republic of Moldova", "Poland", "Romania", "Russian Federation", "Slovakia", "Ukraine", "Åland Islands", "Channel Islands", "Denmark", "Estonia","Faroe Islands", "Finland", "Isle of Man", "United Kingdom", "Iceland", "Ireland", "Latvia", "Lithuania", "Norway", "Sweden", "Albania", "Andorra", "Bosnia and Herzegovina", "Croatia", "Greece", "Italy", "Malta",  "Montenegro", "Portugal", "San Marino", "Serbia", "Slovenia", "Spain", "Gibraltar" ,"The former Yugoslav Republic of Macedonia", "Austria", "Belgium", "Switzerland", "Germany", "France", "Liechtenstein", "Luxembourg", "Monaco", "Netherlands", "Saint Pierre and Miquelon") #53
+
+    least_developed_countries <- c("Afghanistan", "Angola", "Bangladesh", "Benin", "Bhutan", "Burkina Faso", "Burundi", "Cambodia", "Central African Republic", "Chad", "Comoros", "Democratic Republic of the Congo", "Djibouti", "Equatorial Guinea", "Eritrea", "Ethiopia", "Gambia", "Guinea", "Guinea-Bissau", "Haiti", "Kiribati", "Lao People's Democratic Republic", "Lesotho", "Liberia", "Madagascar", "Malawi", "Mali", "Mauritania", "Mozambique", "Myanmar", "Nepal", "Niger", "Rwanda", "Sao Tome and Principe", "Senegal", "Sierra Leone", "Solomon Islands", "Somalia", "Sudan", "South Sudan", "Timor-Leste", "Togo", "Tuvalu", "Uganda", "United Republic of Tanzania", "Vanuatu", "Yemen", "Zambia") #48
+  
+  # add region & LDC variables to dataframe
+  df <- df %>% mutate(region = NA_character_, LDC = FALSE)
+  
+  # creating list with regions
+  regions <- list(sub_saharan_africa = sub_saharan_africa, northern_africa_western_asia = northern_africa_western_asia, central_southern_asia = central_southern_asia, eastern_southeastern_asia = eastern_southeastern_asia, latin_america_caribbean = latin_america_caribbean, oceania = oceania, europe_northern_america = europe_northern_america, least_developed_countries = least_developed_countries)
+  
+  # loop for dataframe to have each country checked against the 6 regions
+  region_id_number = 1  
+  for (r in regions) {
+    # loop for individual region to be evaluated against every country in dataframe
+    for (c in r) {
+      # which rows match the specific region
+      row_matches <- as.numeric(c == df[["countries"]])
+      # go through each row and add region name if there's a match
+      for (n in 1:nrow(df)) {
+        if (region_id_number == 8) {
+          if (row_matches[n] == 1) {
+            df$LDC[n] <- TRUE
+          }
+        }
+        else if (row_matches[n] == 1) {
+          df$region[n] <- names(regions)[region_id_number]
+        } 
+      }
+    }
+  # add to region id number for naming
+    region_id_number = region_id_number + 1
+  } 
+  
+   # make region & LDC variable a categorical variable
+    df <- df %>% mutate_at(c("region", "LDC"), as.factor)
+  
+  # return new df
+  return(df)
+}
+
+# add regions from UN website
+annual_rate_change <- add_UN_regions(annual_rate_change)
+drinking_water <- add_UN_regions(drinking_water)
+hygiene <- add_UN_regions(hygiene)
+improved_sanitation_facilities <- add_UN_regions(improved_sanitation_facilities)
+improved_water_supply <- add_UN_regions(improved_water_supply)
+sanitation <- add_UN_regions(sanitation)
+```
+
+*After using the add_UN_regions(), the drinking water dataframe was formatted this way.*
+
+```{r Developing Dataframe 4, echo=FALSE}
+drinking_water
+```
+
+The following functions are used only to reproduce the graphs, tables, and numbers that are seen in the "Investigating Data" portion of the 
+
+*unicef_summary_table(df, ws, yr, country, title = NA, colnames = c(NA))*
+
+- This function creates a singular table on the dataframe with the specified water_supply, year, and country_level designated. The table includes summary statistics. The information is grouped by region and includes a column on least developed regions.
+
+- The function's arguments correlate to three of the column names (water_supply, year, country_level) that are found in all the dataframes. The dataframe argument (df) selects which dataframe to create the table from, and the title and colnames arguments define the title and column names, respectively, of the table.
+
+- The table is created using the summary_table() function in the [qwraps2 package](https://cran.r-project.org/web/packages/qwraps2/vignettes/summary-statistics.html), but in order for the table to properly show up in the r markdown, the rlang package is also required. The rlang package has the ".data" pronoun, which is used in the list of table components (the second argument in the summary_table function). It is also required to have *options(qwraps2_markup = "markdown")* set as well in order for the table to work in r markdown.
+
+- The first part of the function creates two dataframes that only has the information inputted in the arguments i.e dataframe, water supply, country level, and year specifications. The difference in the dataframes is that one is being used for region information while the other is specifically for least developed countries information.
+
+- The summarystats variable is a list with the different summary statistics on the country's population percentage. The table includes minimum, maximum, median, IQR, IQR range, mean, and standard deviation. The median (IQR) and mean (SD) use qwraps2 functions median_iqr() and mean_sd(), respectively. min() and max() come from the base package, and IQR() comes from the stat package. I use round() on min(), max(), and IQR() to round the statistics to the second decimal place in order to make the numbers more readable.
+
+- The names(summarystats) assigns the table_name to the table, and the name depends on the year the dataframe is using. The yr variable is then turned as a character to become the name of the table.
+
+- The second part of the function creates the table objects by using the summary_table() function twice: once on the region dataframe and the other on the least developed countries dataframe. Both use summarystats as their second argument. Afterwards, cbind() is used to combine both table objects into one.
+
+- The if else statement determines what the function should return. If the title and colnames argument of the function are defined, then the print() function is used to print the table with its title (using the rtitle argument) and column names (using the cnames argument). The rtitle and cnames argument are unique to when using print() on qwraps2_summary_table objects. The qwraps2 CRAN pdf, which was linked above, explains that in section 3, titled "Building a Data Summary Table."
+
+*unicef_two_tables(dataframe, water, country_level, title_name)*
+
+- As much as I love using the qwraps2 table, the only downside was I couldn't use the filter() function from dplyr with the .data pronoun to make 2000 and 2015 sections in one table. Neither could I just use the argument variable x. Therefore, I created another function that automatically made two tables with the only difference being their year, title, and colname arguments. The second table automatically sets the title and colname arguments to repeatedly producing "-".
+
+*retrieve_data(df, ws, country, yr = NA, reg = NA, column = FALSE)*
+
+- Embedding lines of R code into my text prevents me from having to look at my table and copy and paste the summary statistics into my texts (and possibly copying down the wrong number). However, the r embedded code got increasingly complicated to write because of the amount of filtering required to get the dataframe I want. Therefore, I created the retrieve_data() function to help decrease the amount of code in my texts.
+
+- Occassionally, I may not want to specify the region or year for my dataframe; I may want all of the regions' percentages when calculating statistics or I may want percentages form both 2000 and 2015. Therefore, I made the region and year arguments optional, and I added several if else statements that signify what to do if either, both, or neither were specified.
+
+- I may want the function to return either a dataframe or the percentage column of the dataframe. Therefore, I created an if else statement that evaluated what to do if the column was either TRUE or FALSE. If column is TRUE, then the percentage column is returned. If FALSE, then the dataframe is returned.
+
+*water_supply_graph(df, ws, title_name)*
+
+- This function creates similar boxplot graphs using ggplot2; the only difference is the specified dataframe, water supply, and title name. I will explain the layers of the graph by function.
+
+- scale_x_discrete() was used to name the x axis ("Region") and rename the labels of each region, which makes the region label names look better instead of having the names of the variables that contain underscores and lowercase letters.
+
+- labs() gave the graph a title (which was set by the function's title_name argument) and a pre-set subtitle and y axis title. The x axis title was set in the scale_x_discrete() function.
+
+- geom_boxplot() creates the boxplot graph.
+
+- facet_grid() splits the graph's data into panels defined by two categorical variables. For these graphs specifically, horizontally, the graphs were divided by the country_level variable, whereas vertically the graphs were separated by the year variable. I used the labeller argument to capitalize the level names for the country_level. The ggplot2 R documentation says facet_grid() "forms a matrix of panels defined by row and column faceting variables" and is most useful when "all combinations of the [discete] variables exist in the data."
+
+- theme_minimal() was one of the pre-set theme options I chose for my graphs. I used [this website](http://www.sthda.com/english/wiki/ggplot2-themes-and-background-colors-the-3-elements#theme_economist-theme-based-on-the-plots-in-the-economist-magazine) to browse for a theme that I wanted. 
+
+- coord_flip() flipped the x and y axis so that regions was now on the y axis and percentage was on the x axis. I wanted to do this in the aes() function, but the graphs did not turn out correctly. It was easier to flip the x and y axis at the end.
+
+*ldc_graph(df, ws, title_text)*
+
+- There are only a couple of differences between the water_supply_graph() function and this function. The main difference is that the x argument in aes() is LDC and not region. There is no scale_x_discrete() because the tick marks (which were TRUE and FALSE in ldc_graph) didn't need to be renamed. There is also no subtitle. Everything else about water_supply_graph() and ldc_graph() is identical. 
+
+*outliers_region*
+
+-
+
+``` {r Table and Graph Functions, results='asis', warning = FALSE}
+# function to make tables
+unicef_summary_table <- function(df, ws, yr, country, title = NA, colnames = c(NA)) {
+  # dataframe with filter
+  dtfr <- df %>% filter(water_supply == ws & year == yr & country_level == country) %>% select(region, percentage)
+  ldc <- df %>% filter(LDC == TRUE & water_supply == ws & country_level == country & year == yr) %>% select(region, percentage)
+  non_ldc <- df %>% filter(LDC == FALSE & water_supply == ws & country_level == country & year == yr) %>% select(region, percentage)
+  
+  # summary stats to take from dataframe
+  summarystats <- list(
+    table_name =
+    list("Minimum" = ~ round(min(.data$percentage), 2),
+         "Maximum" = ~ round(max(.data$percentage), 2),
+         "Median (QR1,QR3)" = ~ qwraps2::median_iqr(.data$percentage),
+         "IQR" = ~ round(IQR(.data$percentage), 2),
+         "Mean (SD)" = ~ qwraps2::mean_sd(.data$percentage)
+    ))
+  
+  names(summarystats) <- as.character(yr)
+  
+  # create table
+  world <- summary_table(dtfr, summarystats)
+  obj <- summary_table(dtfr %>% dplyr::group_by(region), summarystats)
+  obj_ldc <- summary_table(ldc, summarystats)
+  obj_non_ldc <- summary_table(non_ldc, summarystats)
+  combo <- cbind(cbind(world, cbind(obj, obj_ldc)), obj_non_ldc)
+  
+  
+  # print column names & return
+  if (!is.na(title) & !is.na(colnames)) {
+    return (print(combo, rtitle = title, cnames = colnames))
+  } else {
+   # only return table
+    return(combo) 
+  }
+}
+
+# function to make two tables under each graph
+unicef_two_tables <- function(dataframe, water, country_level, title_name) {
+  unicef_summary_table(df = dataframe, ws = water, yr = 2000, country = country_level, title = title_name, colnames = c("World","Central & Southern Asia", "Eastern & Southeastern Asia", "Europe & Northern America", "Latin America & Caribbean", "Northern Africa & Western Asia", "Oceania", "Sub-Saharan Africa", "Least Developed Countries", "Not LDC"))
+
+  unicef_summary_table(df = dataframe, ws = water, yr = 2015, country = country_level, title = title_name, colnames = c("World","Central & Southern Asia", "Eastern & Southeastern Asia", "Europe & Northern America", "Latin America & Caribbean", "Northern Africa & Western Asia", "Oceania", "Sub-Saharan Africa", "Least Developed Countries", "Not LDC"))
+}
+
+# retrieve data with desired restrictions
+retrieve_data <- function(df, ws, country, yr = NA, reg = NA, column = FALSE) {
+  # retrieve a specific region's dataframe or general dataframe
+  if (!is.na(reg) & !is.na(yr)) {
+    dataframe <-
+      df %>% filter(water_supply == ws &
+                      country_level == country & year == yr & region == reg)
+    
+  } else if (!is.na(reg) & is.na(yr)) {
+    dataframe <-
+      df %>% filter(water_supply == ws &
+                      country_level == country & region == reg)
+    
+  } else if (is.na(reg) & !is.na(yr)) {
+    dataframe <-
+      df %>% filter(water_supply == ws &
+                      country_level == country & year == yr)
+    
+  } else if (is.na(reg) & is.na(yr)) {
+    dataframe <-
+      df %>% filter(water_supply == ws &
+                      country_level == country)
+  }
+  
+  # retrive entire dataframe or only percentage column
+  if (column == FALSE) {
+    return(dataframe)
+  
+  } else if (column == TRUE) {
+    col <- pull(dataframe %>% select(percentage))
+    return(col)
+  }
+}
+
+# function to make desired ggplot boxplots
+## water supply
+water_supply_graph <- function(df, ws, title_name) {
+  ggplot((df %>% filter(water_supply == ws)), aes(x = region, y = percentage)) +
+  scale_x_discrete(name = "Region", labels = c("sub_saharan_africa" = "Sub-Saharan Africa", "oceania" = "Oceania", "northern_africa_western_asia" = "Northern Africa & Western Asia", "latin_america_caribbean" = "Latin America & the Caribbean", "europe_northern_america" = "Europe & Northern America", "eastern_southeastern_asia" = "Eastern & Southeastern Asia", "central_southern_asia" = "Central & Southern Asia")) +
+  labs(title = title_name, subtitle = "Comparing country levels and year of observed percentages", y = "Percentage (%)") +
+  geom_boxplot() +
+  facet_grid(year ~ country_level, labeller = labeller(country_level = c(national = "National", rural = "Rural", urban = "Urban" ))) +
+  theme_minimal() +
+  coord_flip()
+}
+
+## least developed country & water supply
+ldc_graph <- function(df, ws, title_text) {
+  ggplot((df %>% filter(water_supply == ws )), aes(x = LDC, y = percentage)) +
+  labs(title = title_text, y = "Percentage (%)") +
+  geom_boxplot() +
+    facet_grid(year ~ country_level, labeller = labeller(country_level = c(national = "National", rural = "Rural", urban = "Urban"))) +
+  theme_minimal() +
+  coord_flip()
+}
+
+## outliers
+outliers_region <- function(dataframe, water_supply, cl, year, region) {
+  # create dataframe object & other statistics
+  IQR <- IQR(retrieve_data(dataframe, water_supply, cl, year, region) %>% select(percentage) %>% pull())
+  
+  Q1 <- quantile(retrieve_data(dataframe, water_supply, cl, year, region) %>% select(percentage) %>% pull(), probs = 0.25) %>% as.numeric()
+  
+  df_object <- retrieve_data(dataframe, water_supply, cl, year, region) %>% filter(percentage < (Q1 - ((3/2) * IQR))) %>% arrange(percentage)
+
+  # number of countries
+  num_of_countries <- df_object %>% count() %>% as.numeric()
+  
+  # no outliers
+  if (num_of_countries == 0) {
+    return("NONE")
+  }
+  
+  # for loop
+  string <- ""
+  for (i in 1:num_of_countries) {
+    country <- (df_object %>% select(countries) %>% pull())[i]
+    
+    percent <- round((df_object %>% select(percentage) %>% pull())[i], 2)
+    
+    string <- str_c(string, country, " (", percent, "), ")
+  }
+  
+  string <- substr(string, 1, nchar(string)-2)
+  
+  return(string)
+}
+
+```
+
+# Investigating Data
+
+```{r Creating Countries List, echo=FALSE}
+countries <- data.frame("countries" = c("Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde", "Cameroon", "Central African Republic", "Chad", "Comoros", "Congo", "Côte d'Ivoire", "Democratic Republic of the Congo", "Djibouti", "Equatorial Guinea", "Eritrea", "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Kenya", "Lesotho", "Liberia", "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius", "Mayotte", "Mozambique", "Namibia", "Niger", "Nigeria", "Réunion", "Rwanda", "Sao Tome and Principe", "Senegal", "Seychelles", "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Swaziland", "Togo", "Uganda", "United Republic of Tanzania", "Zambia", "Zimbabwe","Algeria", "Egypt", "Libya", "Morocco", "Sudan", "Tunisia", "Western Sahara", "Azerbaijan", "Armenia", "Bahrain", "Cyprus", "Georgia", "Iraq", "Israel", "Jordan", "Kuwait", "Lebanon", "State of Palestine", "Oman", "Qatar", "Saudi Arabia", "Syrian Arab Republic", "Turkey", "United Arab Emirates", "Yemen", "Saint Helena", "West Bank and Gaza Strip", "Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan", "Uzbekistan", "Afghanistan", "Bangladesh", "Bhutan", "India", "Iran (Islamic Republic of)", "Maldives", "Nepal", "Pakistan", "Sri Lanka", "China", "China, Hong Kong Special Administrative Region", "China, Macao Special Administrative Region", "Democratic People's Republic of Korea", "Japan", "Mongolia", "Republic of Korea", "Brunei Darussalam", "Cambodia", "Indonesia", "Lao People's Democratic Republic", "Malaysia", "Myanmar", "Philippines", "Singapore", "Thailand", "Timor-Leste", "Viet Nam", "Anguilla", "Antigua and Barbuda", "Aruba", "Bahamas", "Barbados", "Bonaire, Sint Eustatius and Saba", "British Virgin Islands", "Cayman Islands", "Cuba", "Curaçao", "Dominica", "Dominican Republic", "Grenada", "Guadeloupe", "Haiti", "Jamaica", "Martinique", "Montserrat", "Puerto Rico", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Sint Maarten (Dutch part)", "Suriname", "Trinidad and Tobago", "Turks and Caicos Islands", "United States Virgin Islands", "Honduras", "Costa Rica", "El Salvador", "Guatemala", "Mexico", "Nicaragua", "Panama", "Argentina", "Belize", "Bolivia (Plurinational State of)", "Brazil", "Chile", "Colombia", "Ecuador", "French Guiana", "Falkland Islands (Malvinas)", "South Georgia & the South Sandwich Islands", "Guyana", "Paraguay", "Peru", "Uruguay", "Venezuela (Bolivarian Republic of)", "Australia","Christmas Island", "Cocos (Keeling) Islands", "Heard Island & McDonald Islands", "Norfolk Island", "New Zealand", "Fiji", "New Caledonia", "Papua New Guinea", "Solomon Islands", "Vanuatu", "Kiribati", "Marshall Islands", "Micronesia (Federated States of)", "Nauru", "Northern Mariana Islands", "Palau", "Guam", "French Polynesia", "Wallis and Futuna Island", "Pitcairn", "Cook Islands", "Niue", "Tokelau", "Tonga", "Tuvalu", "American Samoa", "Samoa", "Wallis and Futuna Islands", "Bermuda", "Canada", "Greenland", "United States of America", "Bulgaria", "Belarus", "Czech Republic", "Hungary", "Republic of Moldova", "Poland", "Romania", "Russian Federation", "Slovakia", "Ukraine", "Åland Islands", "Channel Islands", "Denmark", "Estonia","Faroe Islands", "Finland", "Isle of Man", "United Kingdom", "Iceland", "Ireland", "Latvia", "Lithuania", "Norway", "Sweden", "Albania", "Andorra", "Bosnia and Herzegovina", "Croatia", "Greece", "Italy", "Malta",  "Montenegro", "Portugal", "San Marino", "Serbia", "Slovenia", "Spain", "Gibraltar" ,"The former Yugoslav Republic of Macedonia", "Austria", "Belgium", "Switzerland", "Germany", "France", "Liechtenstein", "Luxembourg", "Monaco", "Netherlands", "Saint Pierre and Miquelon"))
+
+countries <- add_UN_regions(countries)
+```
+
+*All Countries*
+
+``` {r Countries by Region, echo = FALSE}
+countries
+
+countries %>% select(countries, region) %>% count(region, sort = TRUE)
+```
+
+*Least Developed Countries only*
+
+``` {r Least Developed Countries, echo = FALSE}
+countries %>% filter(LDC == TRUE) %>% select(countries, region)
+
+countries %>% filter(LDC == TRUE) %>% count(region, sort = TRUE)
+```
+
+
+*WORLD STATISTICS & GRAPHS?*
+
+*WASH Divisions*
+
+Each WASH division (drinking water, sanitation, hygiene) is divided into separate data frames; therefore, they will be evaluated separately in their own sections. Each summary statistic will be evaluted at the region level, and I will also talk about certain counties and where they lie on the region's percentage range. 
+
+## Drinking Water {.tabset .tabset-fade .tabset-pills}
+
+Drinking water section evaluates what percentages of country's populations has access to clean drinking water, and whether the sources of drinking water have improved or not. The annual rate change dataframe, which is a separate dataframe, documents the percentage rate change per year of countries. It is able to show the rate at which countries improved their drinking water resources.
+
+Some countries may not have observations in every category.
+
+### At Least Basic {.tabset .tabset-fade .tabset-pills}
+
+```{r Graphs At Least, results='asis', echo = FALSE, warning = FALSE}
+# All levels and years comparing together
+water_supply_graph(drinking_water, "at_least_basic", "% of Population Accessing At Least Basic Drinking Water")
+
+# Least Developed Countries graph
+ldc_graph(drinking_water, "at_least_basic", "% of Least Developed Countries At Least Basic Drinking Water")
+```
+
+#### National
+
+``` {r National At Least, results='asis', echo = FALSE, warning = FALSE}
+# National Level, At Least Basic
+unicef_two_tables(drinking_water, "at_least_basic", "national", "National: At Least Basic" )
+```
+
+OUTLIERS
+
+**2000**
+
+- *Central & Southern Asia*: `r outliers_region(drinking_water, "at_least_basic", "national", 2000, "central_southern_asia")`
+
+- *Eastern & Southeastern Asia*: NONE
+
+- *Europe & Northern America*: `r outliers_region(drinking_water, "at_least_basic", "national", 2000, "europe_northern_america")`
+
+- *Latin America & the Caribbean*: `r outliers_region(drinking_water, "at_least_basic", "national", 2000, "latin_america_caribbean")`
+
+- *Northern Africa & Western Asia*: `r outliers_region(drinking_water, "at_least_basic", "national", 2000, "northern_africa_western_asia")`
+
+- *Oceania*: `r outliers_region(drinking_water, "at_least_basic", "national", 2000, "oceania")`
+
+- *Sub-Saharan Africa*: NONE
+
+**2015**
+
+- *Central & Southern Asia*: `r outliers_region(drinking_water, "at_least_basic", "national", 2015, "central_southern_asia")`
+
+- *Eastern & Southeastern Asia*: NONE
+
+- *Europe & Northern America*: `r outliers_region(drinking_water, "at_least_basic", "national", 2015, "europe_northern_america")`
+
+- *Latin America & the Caribbean*: `r outliers_region(drinking_water, "at_least_basic", "national", 2015, "latin_america_caribbean")`
+
+- *Northern Africa & Western Asia*: `r outliers_region(drinking_water, "at_least_basic", "national", 2015, "northern_africa_western_asia")`
+
+- *Oceania*: `r outliers_region(drinking_water, "at_least_basic", "national", 2015, "oceania")`
+
+- *Sub-Saharan Africa*: NONE
+
+#### Rural
+
+``` {r Rural At Least, results='asis', echo = FALSE, warning = FALSE}
+ # Rural Level, At Least Basic
+unicef_two_tables(drinking_water, "at_least_basic", "rural", "Rural: At Least Basic")
+```
+
+OUTLIERS
+
+**2000**
+
+- *Central & Southern Asia*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2000, "central_southern_asia")`
+
+- *Eastern & Southeastern Asia*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2000, "eastern_southeastern_asia")`
+
+- *Europe & Northern America*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2000, "europe_northern_america")`
+
+- *Latin America & the Caribbean*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2000, "latin_america_caribbean")`
+
+- *Northern Africa & Western Asia*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2000, "northern_africa_western_asia")`
+
+- *Oceania*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2000, "oceania")`
+
+- *Sub-Saharan Africa*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2000, "sub_saharan_africa")`
+
+**2015**
+
+- *Central & Southern Asia*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2015, "central_southern_asia")`
+
+- *Eastern & Southeastern Asia*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2015, "eastern_southeastern_asia")`
+
+- *Europe & Northern America*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2015, "europe_northern_america")`
+
+- *Latin America & the Caribbean*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2015, "latin_america_caribbean")`
+
+- *Northern Africa & Western Asia*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2015, "northern_africa_western_asia")`
+
+- *Oceania*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2015, "oceania")`
+
+- *Sub-Saharan Africa*: `r outliers_region(drinking_water, "at_least_basic", "rural", 2015, "sub_saharan_africa")`
+
+
+#### Urban
+
+``` {r Urban At Least, results='asis', echo = FALSE, warning = FALSE}
+# Urban Level, At Least Basic
+unicef_two_tables(drinking_water, "at_least_basic", "urban", "Urban: At Least Basic")
+```
+
+OUTLIERS
+
+**2000**
+
+- *Central & Southern Asia*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2000, "central_southern_asia")`
+
+- *Eastern & Southeastern Asia*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2000, "eastern_southeastern_asia")`
+
+- *Europe & Northern America*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2000, "europe_northern_america")`
+
+- *Latin America & the Caribbean*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2000, "latin_america_caribbean")`
+
+- *Northern Africa & Western Asia*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2000, "northern_africa_western_asia")`
+
+- *Oceania*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2000, "oceania")`
+
+- *Sub-Saharan Africa*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2000, "sub_saharan_africa")`
+
+**2015**
+
+- *Central & Southern Asia*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2015, "central_southern_asia")`
+
+- *Eastern & Southeastern Asia*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2015, "eastern_southeastern_asia")`
+
+- *Europe & Northern America*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2015, "europe_northern_america")`
+
+- *Latin America & the Caribbean*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2015, "latin_america_caribbean")`
+
+- *Northern Africa & Western Asia*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2015, "northern_africa_western_asia")`
+
+- *Oceania*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2015, "oceania")`
+
+- *Sub-Saharan Africa*: `r outliers_region(drinking_water, "at_least_basic", "urban", 2015, "sub_saharan_africa")`
+
+#### Analysis
+
+- The 2000 minimum was in `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$countries)[1]` (`r round(min(retrieve_data(drinking_water, "at_least_basic", "national", "2000", column = TRUE)),2)`), a sub-saharan african and least developed country.
+
+- The next four lowest percentage countries were `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$countries)[2]` (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$percentage)[2], 2)`), `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$countries)[3]`, (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$percentage)[3], 2)`), `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$countries)[4]` (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$percentage)[4], 2)`), and `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$countries)[5]` (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% arrange(percentage))$percentage)[5], 2)`).
+
+- The 2015 minimum was in `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$countries)[1] ` (`r round(min(retrieve_data(drinking_water, "at_least_basic", "national", "2015", column = TRUE)),2)`), a sub-saharan african and least developed country.
+
+- The next four lowest percentage countries were `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$countries)[2]` (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$percentage)[2], 2)`), `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$countries)[3]`, (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$percentage)[3], 2)`), `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$countries)[4]` (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$percentage)[4], 2)`), and `r  ((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$countries)[5]` (`r  round(((retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% arrange(percentage))$percentage)[5], 2)`).
+
+- In 2000, only `r as.numeric(retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% filter(percentage < (as.numeric(quantile((retrieve_data(drinking_water, "at_least_basic", "national", 2000))$percentage, probs = 0.25)))) %>% count())` of the `r as.numeric(retrieve_data(drinking_water, "at_least_basic", "national", 2000) %>% count())` countries were below the 25th percentile (`r round(as.numeric(quantile((retrieve_data(drinking_water, "at_least_basic", "national", 2000))$percentage, probs = 0.25)),2)`), and `r as.numeric(retrieve_data(drinking_water, "at_least_basic", "national", 2000, reg = "sub_saharan_africa") %>% filter(percentage < (as.numeric(quantile((retrieve_data(drinking_water, "at_least_basic", "national", 2000))$percentage, probs = 0.25)))) %>% count())` of those countries were from the sub-saharan african region.
+
+- In 2015, only `r as.numeric(retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% filter(percentage < (as.numeric(quantile((retrieve_data(drinking_water, "at_least_basic", "national", 2015))$percentage, probs = 0.25)))) %>% count())` of the `r as.numeric(retrieve_data(drinking_water, "at_least_basic", "national", 2015) %>% count())` countries were below the 25th percentile (`r round(as.numeric(quantile((retrieve_data(drinking_water, "at_least_basic", "national", 2015))$percentage, probs = 0.25)),2)`), and `r as.numeric(retrieve_data(drinking_water, "at_least_basic", "national", 2015, reg = "sub_saharan_africa") %>% filter(percentage < (as.numeric(quantile((retrieve_data(drinking_water, "at_least_basic", "national", 2015))$percentage, probs = 0.25)))) %>% count())` of those countries were from the sub-saharan african region.
+
+
+# Conclusions
+
+I ended up not completing this project due to the amount of time in between finishing this project and doing school. I wanted to move on and look at other datasets that interested me. However, I'm still proud of the progress I made on this project and still decided it was worth posting.
+
+
