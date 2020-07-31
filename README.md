@@ -1,5 +1,5 @@
 # Training
-_To improve coding, one needs to practice and train!_
+_Code used to improve skill-sets._
 
 This repository contains code that I've used to develope my coding skills and be able to practice the techniques and skills needed to complete projects in my portfolio. I've provided explanations of each file and what you'd find.
 
