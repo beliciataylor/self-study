@@ -1,5 +1,5 @@
 # Training
-_Code used to improve skill-sets._
+_Code used to improve skill-sets_
 
 This repository contains code that I've used to develope my coding skills and be able to practice the techniques and skills needed to complete projects in my portfolio. I've provided explanations of each file and what you'd find.
 
