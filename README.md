@@ -7,6 +7,6 @@ This repository contains code that I've used to develop my coding skills and be 
 
 This folder contains my typed-up chapter notes and codes from the _Text Analytics with Python: A Practitioner's Guide to Natural Language Processing_. Each chapter has a folder that contains Jupyter notebooks of the entire chapter and also Jupyter notebooks of each section of the chapter with my notes. I created the sections when I was reviewing the chapter notebook a second time. Each folder also contains the data used in each chapter and also saved models that were trained in order to avoid having to retrain the models each time I run the notebook. The folder handmade also contains modules needed in the chapters or modules that I made to make loading data between section notebooks easier.
 
-## PostgreSQL Tutorial: from [_PostgreSQL Tutorial Website](https://www.postgresqltutorial.com/)
+## PostgreSQL Tutorial: from [_PostgreSQL Tutorial Website_](https://www.postgresqltutorial.com/)
 
 TBD
