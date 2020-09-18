@@ -1,6 +1,2 @@
 
-.DS_Store
-NLP_Learning/.DS_Store
-NLP_Learning/ch9_sentiment_analysis/.DS_Store
-NLP_Learning/ch10_deep_learning/.DS_Store
-ECON485_EmpiricalMethods_ML/.DS_Store
+*.DS_Store
