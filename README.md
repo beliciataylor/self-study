@@ -1,5 +1,5 @@
 # Self-Study
-_Teaching myself and expanding my own skillsets_
+_Code and materials used to self-teach programming languages_
 
 This repository contains code that I've used to develop my coding skills and be able to practice the techniques and skills needed to complete projects in my portfolio. I've provided explanations of each file and what you'd find.
 
