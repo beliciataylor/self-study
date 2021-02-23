@@ -8,10 +8,10 @@ _Code and materials used to self-teach programming_
 [Book's Source Code](https://github.com/Apress/text-analytics-w-python-2e)
 
 This folder contains my typed-up chapter notes and codes from the _Text Analytics with Python: A Practitioner's Guide to Natural Language Processing_. Each chapter contains the following:
-    * my Jupyter notebooks of each section in a chapter
-    * data used in the chapter 
-    * saved trained models (when applicable) 
-    * modules I made to make loading data between section notebook easier
+* my Jupyter notebooks of each section in a chapter
+* data used in the chapter 
+* saved trained models (when applicable) 
+* modules for loading data between section notebook easier
     
 
 ## Data Science From Scratch
