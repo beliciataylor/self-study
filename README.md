@@ -22,7 +22,7 @@ TBD
 
 ## Advanced NLP with spaCy 
 
-[Course Website](https://course.spacy.io/en)
+[Course Website - English](https://course.spacy.io/en)
 
 [Course's Source Code](https://github.com/ines/spacy-course)
 
