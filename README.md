@@ -3,18 +3,20 @@ _Code and materials used to self-teach programming_
 
 ## Text Analytics with Python
 
-[2nd Edition](https://www.amazon.com/Text-Analytics-Python-Practitioners-Processing-dp-1484243536/dp/1484243536/ref=dp_ob_title_bk)
+[Book's 2nd Edition](https://www.amazon.com/Text-Analytics-Python-Practitioners-Processing-dp-1484243536/dp/1484243536/ref=dp_ob_title_bk)
 
 [Book's Source Code](https://github.com/Apress/text-analytics-w-python-2e)
 
 This folder contains my typed-up chapter notes and codes from the _Text Analytics with Python: A Practitioner's Guide to Natural Language Processing_. Each chapter contains the following:
-* my Jupyter notebooks of each section in a chapter
+* Jupyter notebooks of each section in a chapter
 * data used in the chapter 
 * saved trained models (when applicable) 
 * modules for loading data between section notebook easier
     
 
 ## Data Science From Scratch
+
+[Book's 2nd Edition](https://www.oreilly.com/library/view/data-science-from/9781492041122/)
 
 [Book's Source Code](https://github.com/joelgrus/data-science-from-scratch) 
 
@@ -26,4 +28,4 @@ TBD
 
 [Course's Source Code](https://github.com/ines/spacy-course)
 
-TBD
+Contains Jupyter notebooks of the free course materials on spaCy's website, which is also available on [DataCamp](https://www.datacamp.com/courses/advanced-nlp-with-spacy) as a certificate (but requires a certificate). 
