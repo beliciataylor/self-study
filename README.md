@@ -28,4 +28,14 @@ TBD
 
 [Course's Source Code](https://github.com/ines/spacy-course)
 
-Contains Jupyter notebooks of the free course materials on spaCy's website, which is also available on [DataCamp](https://www.datacamp.com/courses/advanced-nlp-with-spacy) as a certificate (but requires a certificate). 
+This free course teaches you how to use [spaCy](spacy.io/), a natural language processing Python package. The chapters include the following:
+
+1. **Finding words, phrases, names, and concepts**: Learn about documents, spans, tokens, lexical attributes, statistical models and their packages, predicting linguistic annotations and named entities in context, rule-based matching and the matcher, and writing packages.
+
+2. **Large-scale data analysis**: Learn about spaCy's data structures, word vectors and semantics, debugging patterns, and phrase matching.
+
+3. **Processing pipeline**: Learn about processing, inspecting, and customizing the pipeline; simple and complex components, setting extension attributes, scaling and performance, and processing streams.
+
+4. **Training a neural network model**: Learn about creating training data, setting up the pipeline, building the training loop, and training multiple labels.
+
+This folder contains Jupyter notebooks of the free course materials on spaCy's website, which is also available on [DataCamp](https://www.datacamp.com/courses/advanced-nlp-with-spacy) as a certificate (but requires a subscription). 
